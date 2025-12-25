@@ -16,6 +16,13 @@ services:
       IS_ENCRYPTION_ENABLED: ${IS_ENCRYPTION_ENABLED:-false}
     depends_on:
       - webdav
+    labels:
+      # Add basic auth middleware (store SP_BASIC_AUTH_USERS in Coolify as a SECRET env var)
+      - "traefik.http.middlewares.sp-auth.basicauth.users=${SP_BASIC_AUTH_USERS:?}"
+
+      # Attach it to the existing Coolify-generated router.
+      # Keep gzip (Coolify already uses it), add sp-auth.
+      - "traefik.http.routers.http-0-hkwck48kwk0gssws4ggog0o0-app.middlewares=gzip,sp-auth"
 
   # WebDAV sync server
   webdav:
