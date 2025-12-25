@@ -4,14 +4,13 @@ port: 2345
 prefix: /
 permissions: CRUD
 
-# CORS configuration to allow all origins
 cors:
   enabled: true
   credentials: true
   allowed_headers:
-    - '*'
+    - "*"
   allowed_hosts:
-    - '*'
+    - "https://sp.merteraslan.com"
   allowed_methods:
     - GET
     - HEAD
@@ -27,7 +26,7 @@ cors:
     - LOCK
     - UNLOCK
   exposed_headers:
-    - '*'
+    - "*"
 
 users:
   - username: "{env}WEBDAV_USERNAME"
