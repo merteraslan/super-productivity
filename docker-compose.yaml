@@ -6,8 +6,9 @@ services:
       - '8080:80'
     environment:
       # Pre-configured defaults for easier setup
-      WEBDAV_BASE_URL: ${WEBDAV_BASE_URL:-http://localhost:2345/}
-      WEBDAV_USERNAME: ${WEBDAV_USERNAME:-admin}
+      WEBDAV_BASE_URL: ${WEBDAV_BASE_URL:?}
+      WEBDAV_USERNAME: ${WEBDAV_USERNAME:?}
+      WEBDAV_PASSWORD: ${WEBDAV_PASSWORD:?}
       WEBDAV_SYNC_FOLDER_PATH: ${WEBDAV_SYNC_FOLDER_PATH:-/}
       SYNC_INTERVAL: ${SYNC_INTERVAL:-15}
       IS_COMPRESSION_ENABLED: ${IS_COMPRESSION_ENABLED:-true}
