@@ -1,7 +1,6 @@
 version: "3.8"
 
 services:
-  # Super Productivity app (frontend)
   app:
     image: johannesjo/super-productivity:latest
     restart: unless-stopped
@@ -17,13 +16,8 @@ services:
     depends_on:
       - webdav
     labels:
-      # Basic auth users string stored in Coolify as SECRET env var SP_BASIC_AUTH_USERS
-      - "traefik.http.middlewares.sp-auth.basicauth.users=${SP_BASIC_AUTH_USERS:?}"
+      - "traefik.http.routers.https-0-hkwck48kwk0gssws4ggog0o0-app.middlewares=gzip,sp-auth@file"
 
-      # Attach to the HTTPS router (this is the one serving https://sp.merteraslan.com)
-      - "traefik.http.routers.https-0-hkwck48kwk0gssws4ggog0o0-app.middlewares=gzip,sp-auth"
-
-  # WebDAV sync server
   webdav:
     image: hacdias/webdav:latest
     restart: unless-stopped
