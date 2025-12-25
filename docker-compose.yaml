@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  # Super Productivity app (frontend)
+  # Super Productivity app
   app:
     image: johannesjo/super-productivity:latest
     restart: unless-stopped
@@ -10,11 +10,17 @@ services:
     environment:
       WEBDAV_BASE_URL: ${WEBDAV_BASE_URL:?}
       WEBDAV_USERNAME: ${WEBDAV_USERNAME:?}
-      # DO NOT pass WEBDAV_PASSWORD to the frontend
+      # Do NOT pass WEBDAV_PASSWORD into the frontend
       WEBDAV_SYNC_FOLDER_PATH: ${WEBDAV_SYNC_FOLDER_PATH:-/}
       SYNC_INTERVAL: ${SYNC_INTERVAL:-15}
       IS_COMPRESSION_ENABLED: ${IS_COMPRESSION_ENABLED:-true}
       IS_ENCRYPTION_ENABLED: ${IS_ENCRYPTION_ENABLED:-false}
+    labels:
+      # Basic auth users come from Coolify env var SP_BASIC_AUTH_USERS (store as secret)
+      - "traefik.http.middlewares.sp-auth.basicauth.users=${SP_BASIC_AUTH_USERS:?}"
+
+      # Router name is discovered after first deploy, then set in Coolify as SP_ROUTER_NAME
+      - "traefik.http.routers.${SP_ROUTER_NAME:?}.middlewares=sp-auth@docker"
     depends_on:
       - webdav
 
@@ -25,6 +31,7 @@ services:
     expose:
       - "2345"
     environment:
+      # webdav.yaml uses these via {env}...
       WEBDAV_USERNAME: ${WEBDAV_USERNAME:?}
       WEBDAV_PASSWORD: ${WEBDAV_PASSWORD:?}
     volumes:
