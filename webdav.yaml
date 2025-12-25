@@ -30,6 +30,6 @@ cors:
     - '*'
 
 users:
-  - username: admin
-    password: admin
+  - username: "{env}WEBDAV_USERNAME"
+    password: "{env}WEBDAV_PASSWORD"
     directory: /data
