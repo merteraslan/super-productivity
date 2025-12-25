@@ -1,29 +1,38 @@
+version: "3.8"
+
 services:
-  # Super Productivity app
+  # Super Productivity app (frontend)
   app:
     image: johannesjo/super-productivity:latest
-    ports:
-      - '8080:80'
+    restart: unless-stopped
+    expose:
+      - "80"
     environment:
-      # Pre-configured defaults for easier setup
       WEBDAV_BASE_URL: ${WEBDAV_BASE_URL:?}
       WEBDAV_USERNAME: ${WEBDAV_USERNAME:?}
-      WEBDAV_PASSWORD: ${WEBDAV_PASSWORD:?}
+      # DO NOT pass WEBDAV_PASSWORD to the frontend
       WEBDAV_SYNC_FOLDER_PATH: ${WEBDAV_SYNC_FOLDER_PATH:-/}
       SYNC_INTERVAL: ${SYNC_INTERVAL:-15}
       IS_COMPRESSION_ENABLED: ${IS_COMPRESSION_ENABLED:-true}
       IS_ENCRYPTION_ENABLED: ${IS_ENCRYPTION_ENABLED:-false}
+    depends_on:
+      - webdav
 
   # WebDAV sync server
   webdav:
     image: hacdias/webdav:latest
-    ports:
-      - '2345:2345'
+    restart: unless-stopped
+    expose:
+      - "2345"
+    environment:
+      WEBDAV_USERNAME: ${WEBDAV_USERNAME:?}
+      WEBDAV_PASSWORD: ${WEBDAV_PASSWORD:?}
     volumes:
       - ./webdav.yaml:/config.yml:ro
       - webdav_data:/data
+    command: ["-c", "/config.yml"]
     healthcheck:
-      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost:2345/']
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:2345/"]
       interval: 10s
       timeout: 5s
       retries: 3
