@@ -47,21 +47,13 @@ services:
     labels:
       - "traefik.enable=true"
 
-      # HTTPS router for dav (forces LE issuance + routes to port 2345)
-      - "traefik.http.routers.dav-webdav.rule=Host(`dav.merteraslan.com`) && PathPrefix(`/`)"
-      - "traefik.http.routers.dav-webdav.entrypoints=https"
-      - "traefik.http.routers.dav-webdav.tls=true"
-      - "traefik.http.routers.dav-webdav.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.dav-webdav.priority=10000"
-      - "traefik.http.routers.dav-webdav.middlewares=gzip"
-      - "traefik.http.routers.dav-webdav.service=dav-webdav-svc"
-      - "traefik.http.services.dav-webdav-svc.loadbalancer.server.port=2345"
+      # Bind BOTH Coolify-generated routers to an explicit service (avoids “router ignored” cases)
+      - "traefik.http.routers.http-0-hkwck48kwk0gssws4ggog0o0-webdav.service=dav-svc"
+      - "traefik.http.routers.https-0-hkwck48kwk0gssws4ggog0o0-webdav.service=dav-svc"
+      - "traefik.http.services.dav-svc.loadbalancer.server.port=2345"
 
-      # HTTP router for dav (redirect to https)
-      - "traefik.http.routers.dav-webdav-http.rule=Host(`dav.merteraslan.com`) && PathPrefix(`/`)"
-      - "traefik.http.routers.dav-webdav-http.entrypoints=http"
-      - "traefik.http.routers.dav-webdav-http.middlewares=redirect-to-https"
-      - "traefik.http.routers.dav-webdav-http.priority=10000"
+      # Force ACME to treat this router as owning the domain
+      - "traefik.http.routers.https-0-hkwck48kwk0gssws4ggog0o0-webdav.tls.domains[0].main=dav.merteraslan.com"
 
 volumes:
   webdav_data:
