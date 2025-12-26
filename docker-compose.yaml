@@ -18,8 +18,8 @@ services:
     labels:
       - "traefik.enable=true"
 
-      # Your working app router (auth via dynamic config middleware sp-auth@file)
-      - "traefik.http.routers.sp-app-auth.rule=Host(`sp.merteraslan.com`) && PathPrefix(`/`)"
+      # SP UI (protected) — exclude /webdav so it doesn't swallow DAV requests
+      - "traefik.http.routers.sp-app-auth.rule=Host(`sp.merteraslan.com`) && PathPrefix(`/`) && !PathPrefix(`/webdav`)"
       - "traefik.http.routers.sp-app-auth.entrypoints=https"
       - "traefik.http.routers.sp-app-auth.tls=true"
       - "traefik.http.routers.sp-app-auth.tls.certresolver=letsencrypt"
@@ -49,22 +49,16 @@ services:
     labels:
       - "traefik.enable=true"
 
-      # HTTPS WebDAV router (this must win)
-      - "traefik.http.routers.dav-webdav.rule=Host(`dav.merteraslan.com`) && PathPrefix(`/`)"
-      - "traefik.http.routers.dav-webdav.entrypoints=https"
-      - "traefik.http.routers.dav-webdav.tls=true"
-      - "traefik.http.routers.dav-webdav.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.dav-webdav.tls.domains[0].main=dav.merteraslan.com"
-      - "traefik.http.routers.dav-webdav.priority=10000"
-      - "traefik.http.routers.dav-webdav.middlewares=gzip"
-      - "traefik.http.routers.dav-webdav.service=dav-webdav-svc"
-      - "traefik.http.services.dav-webdav-svc.loadbalancer.server.port=2345"
-
-      # HTTP -> HTTPS redirect for WebDAV
-      - "traefik.http.routers.dav-webdav-http.rule=Host(`dav.merteraslan.com`) && PathPrefix(`/`)"
-      - "traefik.http.routers.dav-webdav-http.entrypoints=http"
-      - "traefik.http.routers.dav-webdav-http.middlewares=redirect-to-https"
-      - "traefik.http.routers.dav-webdav-http.priority=10000"
+      # WebDAV on same host: https://sp.merteraslan.com/webdav/
+      - "traefik.http.middlewares.dav-strip.stripprefix.prefixes=/webdav"
+      - "traefik.http.routers.sp-webdav.rule=Host(`sp.merteraslan.com`) && PathPrefix(`/webdav`)"
+      - "traefik.http.routers.sp-webdav.entrypoints=https"
+      - "traefik.http.routers.sp-webdav.tls=true"
+      - "traefik.http.routers.sp-webdav.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.sp-webdav.priority=11000"
+      - "traefik.http.routers.sp-webdav.middlewares=gzip,dav-strip"
+      - "traefik.http.routers.sp-webdav.service=sp-webdav-svc"
+      - "traefik.http.services.sp-webdav-svc.loadbalancer.server.port=2345"
 
 volumes:
   webdav_data:
