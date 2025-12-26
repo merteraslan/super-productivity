@@ -18,12 +18,12 @@ services:
     labels:
       - "traefik.enable=true"
 
-      # SP UI (protected) — exclude /webdav so it doesn't swallow DAV requests
+      # App router (protect everything EXCEPT /webdav)
       - "traefik.http.routers.sp-app-auth.rule=Host(`sp.merteraslan.com`) && PathPrefix(`/`) && !PathPrefix(`/webdav`)"
-      - "traefik.http.routers.sp-app-auth.entrypoints=https"
+      - "traefik.http.routers.sp-app-auth.entryPoints=https"
       - "traefik.http.routers.sp-app-auth.tls=true"
       - "traefik.http.routers.sp-app-auth.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.sp-app-auth.priority=10000"
+      - "traefik.http.routers.sp-app-auth.priority=20000"
       - "traefik.http.routers.sp-app-auth.middlewares=gzip,sp-auth@file"
       - "traefik.http.routers.sp-app-auth.service=sp-app-svc"
       - "traefik.http.services.sp-app-svc.loadbalancer.server.port=80"
@@ -40,22 +40,20 @@ services:
       - ./webdav.yaml:/config.yml:ro
       - webdav_data:/data
     command: ["-c", "/config.yml"]
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:2345/"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
+
+    # IMPORTANT: no healthcheck (otherwise Traefik may drop the container if it doesn't return 2xx)
     labels:
       - "traefik.enable=true"
 
-      # WebDAV on same host: https://sp.merteraslan.com/webdav/
-      - "traefik.http.middlewares.dav-strip.stripprefix.prefixes=/webdav"
+      # Strip /webdav before forwarding to the WebDAV server
+      - "traefik.http.middlewares.dav-strip.stripPrefix.prefixes=/webdav"
+
+      # WebDAV router on the same host, different path
       - "traefik.http.routers.sp-webdav.rule=Host(`sp.merteraslan.com`) && PathPrefix(`/webdav`)"
-      - "traefik.http.routers.sp-webdav.entrypoints=https"
+      - "traefik.http.routers.sp-webdav.entryPoints=https"
       - "traefik.http.routers.sp-webdav.tls=true"
       - "traefik.http.routers.sp-webdav.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.sp-webdav.priority=11000"
+      - "traefik.http.routers.sp-webdav.priority=21000"
       - "traefik.http.routers.sp-webdav.middlewares=gzip,dav-strip"
       - "traefik.http.routers.sp-webdav.service=sp-webdav-svc"
       - "traefik.http.services.sp-webdav-svc.loadbalancer.server.port=2345"
